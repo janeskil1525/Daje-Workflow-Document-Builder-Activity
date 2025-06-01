@@ -42,23 +42,30 @@ our $VERSION = "0.01";
 
 sub process($self) {
 
-    my $test = 1;
     if(my $tt = $self->_load_template()) {
-        if(my $templates = $self->_load_templates()) {
-            my $report = "";
-            my $result = $tt->process(\$templates, $self->context->{context}->{data},\$report);
-            $self->context->{context}->{document} = $report if $result == 1;
+        if(my $templates = $self->_load_templates() and $self->error->has_error() == 0) {
+            if($self->error->has_error() == 0) {
+                my $report = "";
+                if($tt->process(\$templates, $self->context->{context}->{data}, \$report) == 1) {
+                    $self->context->{context}->{document} = $report;
+                } else {
+                    $self->error->add_error($tt->error());
+                }
+            }
         }
     }
 }
 
 sub _load_templates($self) {
+    my $tpl = $self->context->{context}->{template}->{data_section};
     my $templates = Daje::Workflow::Templates->new(
-        data_sections => $self->context->{context}->{template}->{data_section},
+        data_sections => $tpl,
         source        => $self->context->{context}->{template}->{source},
         error         => $self->error,
     )->load_templates();
-    my $template = $templates->{data_sec}->{$self->context->{context}->{template}->{data_section}};
+    my $template = $templates->{data_sec}->{$tpl};
+
+    $self->error->add_error("No template named '$tpl' found") unless length($template) > 0;
     return $template;
 }
 
@@ -67,7 +74,7 @@ sub _load_template($self) {
         {
             INTERPOLATE  => 1
         }
-    ) or $self->error("$Template::ERROR\n");
+    ) or $self->error->add_error("$Template::ERROR\n");
 
     return $tt;
 }
