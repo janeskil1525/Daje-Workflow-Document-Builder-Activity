@@ -1,11 +1,14 @@
 package Daje::Workflow::Document::Builder::Activity;
+use Mojo::Base 'Daje::Workflow::Common::Activity::Base', -base, -signatures;
 use v5.40;
-use experimental 'given';
+
+use Daje::Workflow::Templates;
+use Template;
 
 # NAME
 # ====
 #
-#      Daje::Document::Builder - It's the document builder
+#      Daje::Workflow::Document::Builder::Activity - It's the document builder
 #
 #
 # REQUIRES
@@ -17,7 +20,7 @@ use experimental 'given';
 # DESCRIPTION
 # ===========
 #
-# Daje::Document::Builder Builds documents
+# Daje::Workflow::Document::Builder::Activity Builds documents
 #
 # LICENSE
 # =======
@@ -36,17 +39,38 @@ use experimental 'given';
 
 our $VERSION = "0.01";
 
-has 'type' => 'html';
-has 'config';
-has 'data';
-has 'template_name';
-has 'template';
 
 sub process($self) {
 
-
+    my $test = 1;
+    if(my $tt = $self->_load_template()) {
+        if(my $templates = $self->_load_templates()) {
+            my $report = "";
+            my $result = $tt->process(\$templates, $self->context->{context}->{data},\$report);
+            $self->context->{context}->{document} = $report if $result == 1;
+        }
+    }
 }
 
+sub _load_templates($self) {
+    my $templates = Daje::Workflow::Templates->new(
+        data_sections => $self->context->{context}->{template}->{data_section},
+        source        => $self->context->{context}->{template}->{source},
+        error         => $self->error,
+    )->load_templates();
+    my $template = $templates->{data_sec}->{$self->context->{context}->{template}->{data_section}};
+    return $template;
+}
+
+sub _load_template($self) {
+    my $tt = Template->new(
+        {
+            INTERPOLATE  => 1
+        }
+    ) or $self->error("$Template::ERROR\n");
+
+    return $tt;
+}
 
 
 

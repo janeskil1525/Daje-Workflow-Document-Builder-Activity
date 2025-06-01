@@ -1,4 +1,4 @@
-
+[![Actions Status](https://github.com/janeskil1525/Daje-Workflow-Document-Builder-Activity/actions/workflows/test.yml/badge.svg)](https://github.com/janeskil1525/Daje-Workflow-Document-Builder-Activity/actions)
 # NAME
 
 Daje::Workflow::Document::Builder::Activity - It's new $module
